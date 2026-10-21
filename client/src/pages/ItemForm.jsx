@@ -16,13 +16,39 @@ export default function ItemForm() {
 
   // TODO (edit mode): when there is an `id`, load the item and fill the form.
   useEffect(() => {
-    if (!id) return
-    // TODO
-  }, [id])
+  if (!id) return
+
+  async function loadItem() {
+    try {
+      const response = await api.get(`/items/${id}`)
+
+      const item = response.data.item
+
+      setForm({
+        title: item.title,
+        status: item.status,
+        category: item.category,
+        location: item.location || '',
+        description: item.description || ''
+      })
+
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load item')
+    }
+  }
+
+  loadItem()
+}, [id])
 
   // TODO: update `form` when an input changes.
   function onChange(e) {
     // TODO
+     const { name, value } = e.target;
+
+  setForm({
+    ...form,
+    [name]: value
+  });
   }
 
   // TODO: POST a new item, or PATCH the existing one when editing,
@@ -31,13 +57,95 @@ export default function ItemForm() {
     e.preventDefault()
     setError('')
     // TODO
+    try {
+    if (id) {
+      await api.patch(`/items/${id}`, form)
+    } else {
+      await api.post('/items', form)
+    }
+
+    nav('/items')
+  } catch (err) {
+    setError(err.response?.data?.message || 'Something went wrong')
+  }
   }
 
   return (
     <div className="max-w-lg mx-auto card">
       <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'Report'} Item</h1>
       <form onSubmit={onSubmit} className="space-y-3">
-        {/* TODO: title input, status select, category select, location input and description textarea */}
+        <div>
+  <label htmlFor="title">Title</label>
+
+  <input
+    id="title"
+    name="title"
+    type="text"
+    value={form.title}
+    onChange={onChange}
+    required
+    className="input"
+  />
+  <div>
+  <label htmlFor="status">Status</label>
+
+  <select
+    id="status"
+    name="status"
+    value={form.status}
+    onChange={onChange}
+    className="input"
+  >
+    <option value="lost">Lost</option>
+    <option value="found">Found</option>
+    <option value="claimed">Claimed</option>
+  </select>
+</div>
+<div>
+  <label htmlFor="category">Category</label>
+
+  <select
+    id="category"
+    name="category"
+    value={form.category}
+    onChange={onChange}
+    className="input"
+  >
+    <option value="electronics">Electronics</option>
+    <option value="clothing">Clothing</option>
+    <option value="documents">Documents</option>
+    <option value="accessories">Accessories</option>
+    <option value="other">Other</option>
+  </select>
+</div>
+<div>
+  <label htmlFor="location">Location</label>
+
+  <input
+    id="location"
+    name="location"
+    type="text"
+    value={form.location}
+    onChange={onChange}
+    
+
+    className="input"
+  />
+</div>
+<div>
+  <label htmlFor="description">Description</label>
+
+  <textarea
+    id="description"
+    name="description"
+    value={form.description}
+    onChange={onChange}
+    
+    className="input"
+    rows={4}
+  />
+</div>
+</div>
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <button className="btn" type="submit">Save</button>
       </form>
